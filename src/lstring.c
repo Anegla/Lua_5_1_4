@@ -47,21 +47,26 @@ void luaS_resize (lua_State *L, int newsize) {
 }
 
 
+//创建一个新的字符串
 static TString *newlstr (lua_State *L, const char *str, size_t l,
                                        unsigned int h) {
   TString *ts;
   stringtable *tb;
   if (l+1 > (MAX_SIZET - sizeof(TString))/sizeof(char))
     luaM_toobig(L);
+  /* 开辟新空间 */
   ts = cast(TString *, luaM_malloc(L, (l+1)*sizeof(char)+sizeof(TString)));
+  /* 新ts基本赋值 */
   ts->tsv.len = l;
   ts->tsv.hash = h;
   ts->tsv.marked = luaC_white(G(L));
   ts->tsv.tt = LUA_TSTRING;
   ts->tsv.reserved = 0;
+  /* 字符串复制到ts自己后面 */
   memcpy(ts+1, str, l*sizeof(char));
   ((char *)(ts+1))[l] = '\0';  /* ending 0 */
   tb = &G(L)->strt;
+  /* 根据hash值计算出桶下标 */
   h = lmod(h, tb->size);
   ts->tsv.next = tb->hash[h];  /* chain new entry */
   tb->hash[h] = obj2gco(ts);
@@ -75,20 +80,26 @@ static TString *newlstr (lua_State *L, const char *str, size_t l,
 TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
   GCObject *o;
   unsigned int h = cast(unsigned int, l);  /* seed */
+  //缩短步长
   size_t step = (l>>5)+1;  /* if string is too long, don't hash all its chars */
   size_t l1;
+  //生成hash值
   for (l1=l; l1>=step; l1-=step)  /* compute hash */
     h = h ^ ((h<<5)+(h>>2)+cast(unsigned char, str[l1-1]));
   for (o = G(L)->strt.hash[lmod(h, G(L)->strt.size)];
        o != NULL;
        o = o->gch.next) {
+    //转化为TString
     TString *ts = rawgco2ts(o);
+    //判断等长&&内容一样
     if (ts->tsv.len == l && (memcmp(str, getstr(ts), l) == 0)) {
       /* string may be dead */
       if (isdead(G(L), o)) changewhite(o);
+      //此时等于找到了存在的str
       return ts;
     }
   }
+  //没找到创建一个新的
   return newlstr(L, str, l, h);  /* not found */
 }
 
