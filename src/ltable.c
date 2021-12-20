@@ -396,6 +396,19 @@ static Node *getfreepos (Table *t) {
 ** put new key in its main position; otherwise (colliding node is in its main 
 ** position), new key goes to an empty position. 
 */
+/*为一个Table创建一个新的key
+  找到主位置地址mp
+    如果主位置有东西或者是个空的
+      声明一个othern地址
+      找到一个空的位置n
+        如果没有空的位置
+          重新扩展
+        把othern指向key主位置mp的值在Table的主位置
+        如果othern不等于mp
+          
+        如果othern等于mp
+          
+*/
 static TValue *newkey (lua_State *L, Table *t, const TValue *key) {
   Node *mp = mainposition(t, key);
   if (!ttisnil(gval(mp)) || mp == dummynode) {
