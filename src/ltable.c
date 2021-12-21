@@ -398,15 +398,16 @@ static Node *getfreepos (Table *t) {
 */
 /*为一个Table创建一个新的key
   找到主位置地址mp
-    如果主位置有东西或者是个空的
+    如果主位置被占或者是个空的
       声明一个othern地址
       找到一个空的位置n
         如果没有空的位置
           重新扩展
         把othern指向key主位置mp的值在Table的主位置
-        如果othern不等于mp
-          
-        如果othern等于mp
+        如果othern不等于mp，原本的位置被占了
+          我们不是同门，那么你得把位置给让出来
+        如果othern等于mp，就是一样的hash，冲突了
+          通过next把自己同门师弟连接起来
           
 */
 static TValue *newkey (lua_State *L, Table *t, const TValue *key) {
@@ -481,7 +482,9 @@ const TValue *luaH_getstr (Table *t, TString *key) {
 */
 const TValue *luaH_get (Table *t, const TValue *key) {
   switch (ttype(key)) {
+    //如果用一个nil索引一个表，返回的也是一个nil...
     case LUA_TNIL: return luaO_nilobject;
+    //string类型为下标索引一个表，这种情况有冲突的情况
     case LUA_TSTRING: return luaH_getstr(t, rawtsvalue(key));
     case LUA_TNUMBER: {
       int k;
