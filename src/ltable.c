@@ -406,7 +406,7 @@ static Node *getfreepos (Table *t) {
         把othern指向key主位置mp的值在Table的主位置
         如果othern不等于mp，原本的位置被占了
           我们不是同门，那么你得把位置给让出来
-        如果othern等于mp，就是一样的hash，冲突了
+        如果othern等于mp，就是一样的hash，冲突了=>冲突链接
           通过next把自己同门师弟连接起来
           
 */
